@@ -1,118 +1,285 @@
-// ======================================================
-// app/page.tsx  —  Tech0 Search 検索画面
-// WEEK 8 宿題：このファイルをまるごとコピーして使ってください
-// ======================================================
-
-// 【ポイント①】"use client" — このファイルはブラウザで動くよ、という合図
-// Next.js はデフォルトでサーバー側で動くので、
-// ボタンクリックや useState を使う画面には必ずこの1行が必要！
 "use client";
 
-// 【ポイント②】useState を React から借りてくる
-// useState = 「画面の状態（データ）を覚えておく特別な箱」
 import { useState } from "react";
 
-// ======================================================
-// 型定義：検索結果 1件のデータの「形」を決めておく
-// TypeScript では、データの形を先に決めると安全に書ける
-// ======================================================
 type SearchResult = {
-  id: number;    // 結果を区別するための番号
-  title: string; // 検索結果のタイトル
-  url: string;   // リンク先のURL
+  id: number;
+  title: string;
+  url: string;
+  description?: string;
+  category?: string;
+  file_type?: string;
+  word_count?: number;
+  crawled_at?: string;
+  relevance_score?: number;
+  view_count?: number;
 };
 
-// ======================================================
-// SearchPage コンポーネント（＝このページの設計図）
-// export default = 「このファイルのメイン部品」として外に公開
-// ======================================================
 export default function SearchPage() {
-
-  // ---- useState で「状態の箱」を3つ用意 ----
-
-  // query    : 検索ボックスに入力された文字を覚えておく箱（初期値は空文字）
   const [query, setQuery] = useState("");
-
-  // results  : 検索結果の一覧を覚えておく箱（初期値は空の配列）
-  // <SearchResult[]> は「SearchResult 型のデータが複数入る」という意味
   const [results, setResults] = useState<SearchResult[]>([]);
-
-  // loading  : 今検索中かどうかを覚えておく箱（true=検索中 / false=待機中）
   const [loading, setLoading] = useState(false);
 
-  // ======================================================
-  // handleSearch 関数 — 検索ボタンを押したときに動く処理
-  // async = 「少し時間がかかる処理をする」という印
-  // ======================================================
   const handleSearch = async () => {
+    if (!query.trim()) return;
 
-    // 検索開始 → ローディング状態をONにする（ボタンが「検索中...」になる）
     setLoading(true);
 
     try {
-      // 【fetch】= Next.js の API ルートに「検索してください」とリクエストを送る
-      // /api/search?q=○○ → app/api/search/route.ts が受け取る
-      // encodeURIComponent = 日本語などの特殊文字をURLで使える形に変換
       const res = await fetch(
- 　　　　 `https://tech0-search-api-okamu-ezhnb8fefddrd2fc.southeastasia-01.azurewebsites.net/api/search?q=${encodeURIComponent(query)}`　
-　　　　);
+        `https://tech0-search-api-okamu-ezhnb8fefddrd2fc.southeastasia-01.azurewebsites.net/api/search?q=${encodeURIComponent(query)}`
+      );
 
-      // 受け取ったレスポンスを JSON 形式（JavaScript のオブジェクト）に変換
       const data = await res.json();
-
-      // 取得した results を状態の箱に入れる → 画面が自動的に更新される！
-      // data.results がなければ空配列（[]）をセット（エラー防止）
       setResults(data.results ?? []);
-
+    } catch (error) {
+      console.error("検索エラー:", error);
+      setResults([]);
     } finally {
-      // 成功・失敗どちらの場合もローディング状態をOFFにする
       setLoading(false);
     }
   };
 
-  // ======================================================
-  // return — ブラウザに表示する画面の設計図（JSX）
-  // HTML に似た書き方で、React のコンポーネントを組み合わせる
-  // ======================================================
   return (
-    <main>
-      {/* ページタイトル */}
-      <h1>Tech0 Search</h1>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f1f5f9",
+        color: "#0f172a",
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      }}
+    >
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "280px 1fr",
+          minHeight: "100vh",
+        }}
+      >
+        <aside
+          style={{
+            background: "#ffffff",
+            borderRight: "1px solid #e2e8f0",
+            padding: "28px 20px",
+          }}
+        >
+          <h2 style={{ fontSize: "20px", marginBottom: "20px" }}>
+            🔍 Tech0 Search
+          </h2>
 
-      {/*
-        検索ボックス
-        - value={query}        : 箱の中身を表示する
-        - onChange={...}       : 文字を入力するたびに箱を更新する
-        - onKeyDown={...}      : Enter キーを押しても検索できるようにする
-      */}
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-        placeholder="キーワードを入力..."
-      />
+          <div
+            style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "14px",
+              padding: "16px",
+              marginBottom: "20px",
+            }}
+          >
+            <div style={{ color: "#64748b", fontSize: "13px" }}>
+              検索結果数
+            </div>
+            <div style={{ fontSize: "28px", fontWeight: 700 }}>
+              {results.length} 件
+            </div>
+          </div>
 
-      {/*
-        検索ボタン
-        - onClick={handleSearch} : クリックで handleSearch 関数を呼ぶ
-        - loading が true のときは「検索中...」と表示して操作を待たせる
-      */}
-      <button onClick={handleSearch}>
-        {loading ? "検索中..." : "検索"}
-      </button>
+          <div
+            style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "14px",
+              padding: "16px",
+            }}
+          >
+            <h3 style={{ fontSize: "15px", marginBottom: "12px" }}>
+              🔎 フィルター
+            </h3>
+            <p style={{ fontSize: "13px", color: "#64748b" }}>
+              今回は検索API接続を優先しています。
+              カテゴリ・日付・ファイル種別フィルターは次の拡張で追加できます。
+            </p>
+          </div>
+        </aside>
 
-      {/*
-        検索結果一覧
-        - results.map(...) : results 配列の各要素を <li> に変換して表示
-        - key={r.id}       : React がリストを効率よく管理するための識別子（必須）
-      */}
-      <ul>
-        {results.map((r) => (
-          <li key={r.id}>
-            <a href={r.url}>{r.title}</a>
-          </li>
-        ))}
-      </ul>
+        <section style={{ padding: "36px" }}>
+          <div style={{ maxWidth: "980px", margin: "0 auto" }}>
+            <h1 style={{ fontSize: "36px", marginBottom: "6px" }}>
+              🔍 Tech0 Search
+            </h1>
+
+            <p style={{ color: "#64748b", marginBottom: "28px" }}>
+              社内ナレッジ・資料を全文検索できるアプリ
+            </p>
+
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "24px",
+                boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+                marginBottom: "28px",
+              }}
+            >
+              <h2 style={{ fontSize: "20px", marginBottom: "16px" }}>
+                全文検索
+              </h2>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSearch();
+                  }}
+                  placeholder="例: DX / 提案 / 不具合 / 会議 / 売上"
+                  style={{
+                    flex: 1,
+                    padding: "14px 16px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "12px",
+                    fontSize: "16px",
+                  }}
+                />
+
+                <button
+                  onClick={handleSearch}
+                  disabled={loading}
+                  style={{
+                    padding: "14px 26px",
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontSize: "16px",
+                    fontWeight: 700,
+                    cursor: loading ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {loading ? "検索中..." : "検索"}
+                </button>
+              </div>
+            </div>
+
+            {query && (
+              <h2 style={{ fontSize: "22px", marginBottom: "18px" }}>
+                検索結果: {results.length} 件
+              </h2>
+            )}
+
+            {!query && (
+              <div
+                style={{
+                  background: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  color: "#1e40af",
+                  borderRadius: "14px",
+                  padding: "18px",
+                }}
+              >
+                検索キーワードを入力してください。
+              </div>
+            )}
+
+            {query && results.length === 0 && !loading && (
+              <div
+                style={{
+                  background: "#fff7ed",
+                  border: "1px solid #fed7aa",
+                  color: "#9a3412",
+                  borderRadius: "14px",
+                  padding: "18px",
+                }}
+              >
+                該当する検索結果はありません。
+              </div>
+            )}
+
+            {results.map((r, index) => (
+              <article
+                key={r.id}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "24px",
+                  marginBottom: "18px",
+                  boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: "20px",
+                  }}
+                >
+                  <div>
+                    <h3 style={{ fontSize: "22px", marginBottom: "8px" }}>
+                      {index + 1}. {r.title}
+                    </h3>
+
+                    <div style={{ color: "#64748b", fontSize: "14px" }}>
+                      📄 {r.file_type ?? "ファイル種別不明"}
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: "right", minWidth: "90px" }}>
+                    <div style={{ fontSize: "13px", color: "#64748b" }}>
+                      Score
+                    </div>
+                    <div style={{ fontSize: "22px", fontWeight: 700 }}>
+                      {r.relevance_score ?? "-"}
+                    </div>
+                    <div style={{ fontSize: "13px", color: "#64748b" }}>
+                      👀 {r.view_count ?? 0} views
+                    </div>
+                  </div>
+                </div>
+
+                {r.description && (
+                  <p style={{ marginTop: "14px", color: "#334155" }}>
+                    {r.description}
+                  </p>
+                )}
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(4, 1fr)",
+                    gap: "10px",
+                    marginTop: "18px",
+                    fontSize: "13px",
+                    color: "#475569",
+                  }}
+                >
+                  <div>📁 {r.category ?? "未設定"}</div>
+                  <div>📊 {r.word_count ?? 0} 語</div>
+                  <div>📂 {r.url}</div>
+                  <div>🕒 {r.crawled_at ?? "不明"}</div>
+                </div>
+
+                <a
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-block",
+                    marginTop: "18px",
+                    color: "#2563eb",
+                    fontWeight: 700,
+                    textDecoration: "none",
+                  }}
+                >
+                  ファイルを開く →
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
