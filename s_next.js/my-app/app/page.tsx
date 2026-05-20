@@ -53,7 +53,7 @@ export default function SearchPage() {
       // 【fetch】= Next.js の API ルートに「検索してください」とリクエストを送る
       // /api/search?q=○○ → app/api/search/route.ts が受け取る
       // encodeURIComponent = 日本語などの特殊文字をURLで使える形に変換
-      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`tech0-search-api-okamu-ezhnb8fefddrd2fc.southeastasia-01.azurewebsites.net/search?q=${query}`);
 
       // 受け取ったレスポンスを JSON 形式（JavaScript のオブジェクト）に変換
       const data = await res.json();
